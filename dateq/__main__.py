@@ -58,7 +58,8 @@ def _wrapped_fmt_list() -> str:
 def _iter_inputs(date: Sequence[str]) -> Iterator[str]:
     for d in date:
         if d == "-":
-            yield from click.get_text_stream("stdin")
+            for line in click.get_text_stream("stdin"):
+                yield line.rstrip(os.linesep)
         else:
             yield d
 
@@ -75,28 +76,29 @@ def _iter_inputs(date: Sequence[str]) -> Iterator[str]:
     "--force-tz",
     default=None,
     metavar="TZ",
-    help="force timezone for parsed dates",
+    help="timezone to use for naive dates (parsed dates without a timezone)",
     callback=_parse_timezone,
 )
 @click.option("--utc", is_flag=True, default=False, help="convert to UTC")
 @click.option(
-    "-l",
+    "-L",
     "--localize",
     is_flag=True,
     default=False,
     help="localize time to your current timezone",
 )
 @click.option(
+    "-F",
     "--format",
     metavar="FORMAT" if not LIST_FORMATS else _wrapped_fmt_list(),
     default=None,
     help="format for date string",
 )
 @click.option(
-    "--strict",
+    "--strict/--no-strict",
     is_flag=True,
     default=False,
-    help="raise an error if the date string is invalid",
+    help="raise an error if the date string could not be parsed",
 )
 @click.argument(
     "DATE",
