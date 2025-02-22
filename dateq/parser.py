@@ -17,18 +17,22 @@ DATEPARSER_SETTINGS: _Settings = {"DATE_ORDER": "YMD"}
 
 
 def _parse_epoch_timestamps(
-    date_val: int | float, /, *, parse_epoch_milliseconds: bool = False
+    date_val: int | float,
+    /,
+    *,
+    tz: timezone | zoneinfo.ZoneInfo | None = None,
+    parse_epoch_milliseconds: bool = False,
 ) -> datetime | None:
     # also handles epoch timestamps as integers
     try:
         # convert to make sure its a valid datetime
-        return datetime.fromtimestamp(date_val)
+        return datetime.fromtimestamp(date_val, tz=tz)
     except ValueError:
         pass
 
     if parse_epoch_milliseconds:
         try:
-            return datetime.fromtimestamp(date_val / 1000)
+            return datetime.fromtimestamp(date_val / 1000, tz=tz)
         except ValueError:
             pass
 
@@ -36,11 +40,17 @@ def _parse_epoch_timestamps(
 
 
 def _parse_datetime(
-    date_input: str | int | float, /, *, parse_epoch_milliseconds: bool = False
+    date_input: str | int | float,
+    /,
+    *,
+    tz: timezone | zoneinfo.ZoneInfo | None = None,
+    parse_epoch_milliseconds: bool = False,
 ) -> datetime | None:
     if isinstance(date_input, (int, float)):
         return _parse_epoch_timestamps(
-            date_input, parse_epoch_milliseconds=parse_epoch_milliseconds
+            date_input,
+            parse_epoch_milliseconds=parse_epoch_milliseconds,
+            tz=tz,
         )
 
     # epoch timestamp, but a string
@@ -48,18 +58,29 @@ def _parse_datetime(
         # also handles epoch timestamps as integers
         ds_float = float(date_input)
         return _parse_epoch_timestamps(
-            ds_float, parse_epoch_milliseconds=parse_epoch_milliseconds
+            ds_float,
+            parse_epoch_milliseconds=parse_epoch_milliseconds,
+            tz=tz,
         )
 
     if date_input.strip() == "":
         return None
     elif date_input == "now":
-        return datetime.now()
+        return datetime.now(tz=tz)
 
     try:
         # isoformat - default format when you call str() on datetime
         # this also parses dates like '2020-01-01'
-        return datetime.fromisoformat(date_input)
+        dt = datetime.fromisoformat(date_input)
+        # is this what this should do...?
+        #
+        # if the dt already had a timezone specified, we probably
+        # should not just overwrite it
+        #
+        # this only overwrites if its parsed as naive
+        if dt.tzinfo is None:
+            dt = dt.replace(tzinfo=tz)
+        return dt
     except ValueError:
         pass
 
@@ -74,27 +95,20 @@ def _parse_datetime(
     # all sorts of dates as inputs
     # https://github.com/scrapinghub/dateparser#how-to-use
     res: datetime | None = dateparser.parse(date_input, settings=DATEPARSER_SETTINGS)
-    if res is not None:
-        return res.astimezone()
-
-    return None
+    if res is not None and res.tzinfo is None:
+        return res.replace(tzinfo=tz)
+    return res
 
 
 def _handle_timezone(
     dt: datetime,
     /,
     *,
-    tz: zoneinfo.ZoneInfo | timezone | None,
     convert_to_utc: bool = False,
     localize_datetime: bool = False,
 ) -> datetime:
     if convert_to_utc is True and localize_datetime is True:
         raise ValueError("convert_to_utc and localize_datetime are mutually exclusive")
-    # if nothing set, use the passed timezone else get your own
-    if dt.tzinfo is None and tz is not None:
-        # this just replaces the tzinfo with the one you specified,
-        # it does not change the time itself
-        dt = dt.replace(tzinfo=tz)
     if convert_to_utc or localize_datetime:
         if dt.tzinfo is None:
             # this converts a naive or tz-aware datetime to your timezone
@@ -122,11 +136,13 @@ def parse_datetime(
     This does not assume anything about how the end timezone will be displayed,
     that is controlled by the flags
     """
-    dt = _parse_datetime(date_input, parse_epoch_milliseconds=parse_epoch_milliseconds)
+    dt = _parse_datetime(
+        date_input, tz=tz, parse_epoch_milliseconds=parse_epoch_milliseconds
+    )
     if dt is None:
         return None
     return _handle_timezone(
-        dt, tz=tz, convert_to_utc=convert_to_utc, localize_datetime=localize_datetime
+        dt, convert_to_utc=convert_to_utc, localize_datetime=localize_datetime
     )
 
 

@@ -114,6 +114,11 @@ def parse(
 ) -> None:
     from .parser import parse_datetime, format_datetime
 
+    if format == "python_strftime_string":
+        raise click.BadParameter(
+            "Not literally 'python_strftime_string', you can pass any strftime format string, e.g. %H:%M, %Y-%m-%d, %Y-%m-%d %H:%M:%S; See https://docs.python.org/3/library/datetime.html#strftime-and-strptime-format-codes"
+        )
+
     for raw in _iter_inputs(date):
         dt = parse_datetime(
             raw, tz=force_tz, convert_to_utc=utc, localize_datetime=localize
