@@ -90,16 +90,15 @@ def _handle_timezone(
 ) -> datetime:
     if convert_to_utc is True and localize_datetime is True:
         raise ValueError("convert_to_utc and localize_datetime are mutually exclusive")
+    # if nothing set, use the passed timezone else get your own
+    if dt.tzinfo is None and tz is not None:
+        # this just replaces the tzinfo with the one you specified,
+        # it does not change the time itself
+        dt = dt.replace(tzinfo=tz)
     if convert_to_utc or localize_datetime:
-        # if nothing set, use the passed timezone else get your own
         if dt.tzinfo is None:
-            if tz is not None:
-                # this just replaces the tzinfo with the one you specified,
-                # it does not change the time itself
-                dt = dt.replace(tzinfo=tz)
-            else:
-                # this converts a naive or tz-aware datetime to your timezone
-                dt = dt.astimezone()
+            # this converts a naive or tz-aware datetime to your timezone
+            dt = dt.astimezone()
         # once the time has been set, convert to UTC
         if convert_to_utc:
             return dt.astimezone(tz=timezone.utc)
