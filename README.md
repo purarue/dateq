@@ -36,7 +36,6 @@ Options:
 git clone 'https://github.com/purarue/dateq'
 cd ./dateq
 pip install '.[testing]'
-pytest
 flake8 ./dateq
 mypy ./dateq
 ```
