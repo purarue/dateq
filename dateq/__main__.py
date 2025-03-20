@@ -65,6 +65,14 @@ def _iter_inputs(date: Sequence[str]) -> Iterator[str]:
             yield d
 
 
+def _parse_settings(settings: str | None) -> dict | None:
+    if settings is not None and settings.strip():
+        import json
+
+        return json.loads(settings)
+    return None
+
+
 @main.command(
     short_help="parse dates",
     epilog=(
@@ -98,8 +106,16 @@ def _iter_inputs(date: Sequence[str]) -> Iterator[str]:
 @click.option(
     "--strict/--no-strict",
     is_flag=True,
-    default=False,
+    default=True,
     help="raise an error if the date string could not be parsed",
+)
+@click.option(
+    "--dateparser-settings",
+    default=None,
+    metavar="JSON",
+    help="a json settings object to be used by the dateparser library",
+    type=str,
+    callback=lambda _, __, value: _parse_settings(value) if value else None,
 )
 @click.argument(
     "DATE",
@@ -114,7 +130,11 @@ def parse(
     strict: bool,
     force_tz: zoneinfo.ZoneInfo | None,
     date: Sequence[str],
+    dateparser_settings: dict | None,
 ) -> None:
+    """
+    Pass dates as arguments, or - to parse from STDIN
+    """
     from .parser import parse_datetime, format_datetime
 
     if format == "python_strftime_string":
@@ -124,11 +144,15 @@ def parse(
 
     for raw in _iter_inputs(date):
         dt = parse_datetime(
-            raw, tz=force_tz, convert_to_utc=utc, localize_datetime=localize
+            raw,
+            tz=force_tz,
+            convert_to_utc=utc,
+            localize_datetime=localize,
+            dateparser_settings=dateparser_settings,
         )
         if dt is None:
             if strict:
-                click.echo(f"Invalid date: {raw}", err=True)
+                click.echo(f"dateq: error parsing '{raw}'", err=True)
                 sys.exit(1)
             else:
                 click.echo(raw)

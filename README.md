@@ -19,15 +19,43 @@ pip install git+https://github.com/purarue/dateq
 ```
 Usage: dateq parse [OPTIONS] DATE...
 
-Options:
-  --force-tz TZ    force timezone for parsed dates
-  --utc            convert to UTC
-  -l, --localize   localize time to your current timezone
-  --format FORMAT  format for date string
-  --strict         raise an error if the date string is invalid
-  -h, --help       Show this message and exit.
+  Pass dates as arguments, or - to parse from STDIN
 
-  For a list of all formats, run 'LIST_FORMATS=1 dateq parse --help'
+Options:
+  --force-tz TZ                   timezone to use for naive dates (parsed dates without a timezone)
+  --utc                           convert to UTC
+  -L, --localize                  localize time to your current timezone
+  -F, --format
+      [date | date_ | day |
+      day_of_year | epoch | epoch_milliseconds |
+      human | month | python_strftime_string |
+      time | usdate | week_of_year |
+      weekday | weekday_name | year]
+                                  format for date string
+  --strict / --no-strict          raise an error if the date string could not be parsed  [default: no-
+                                  strict]
+  -h, --help                      Show this message and exit.
+```
+
+### Examples
+
+```bash
+$ dateq parse now
+2025-03-20T01:31:11.093906
+$ dateq parse -Fepoch '3 hours ago'
+1742448701
+$ dateq parse -Ftime 'in 3 hours'
+04:32:02
+$ dateq parse -F'%H:%M' 'in 3 hours'
+04:32
+$ dateq parse -Fhuman '2025-03-20T01:31:11'
+a minute ago
+$ echo '1742459605' | dateq parse -
+2025-03-20T01:33:25
+$ dateq parse 'saturday at 3pm'
+2025-03-15T15:00:00
+$ dateq parse --dateparser-settings '{"PREFER_DATES_FROM": "future"}' 'saturday at 3pm'
+2025-03-22T15:00:00
 ```
 
 ### Tests

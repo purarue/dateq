@@ -12,7 +12,6 @@ if TYPE_CHECKING:
     from dateparser import _Settings
 
 
-# TODO: make this configurable?
 DATEPARSER_SETTINGS: _Settings = {"DATE_ORDER": "YMD"}
 
 
@@ -45,6 +44,7 @@ def _parse_datetime(
     *,
     tz: timezone | zoneinfo.ZoneInfo | None = None,
     parse_epoch_milliseconds: bool = False,
+    dateparser_settings: _Settings | None = None,
 ) -> datetime | None:
     if isinstance(date_input, (int, float)):
         return _parse_epoch_timestamps(
@@ -94,7 +94,14 @@ def _parse_datetime(
     # dateparser is a bit more lenient than the above, lets you type
     # all sorts of dates as inputs
     # https://github.com/scrapinghub/dateparser#how-to-use
-    res: datetime | None = dateparser.parse(date_input, settings=DATEPARSER_SETTINGS)
+
+    opts = dateparser_settings or {}
+    for key, value in opts.items():
+        # only overwrite with defaults if not set by the user
+        if key not in opts:
+            opts[key] = value
+
+    res: datetime | None = dateparser.parse(date_input, settings=opts)
     if res is not None and res.tzinfo is None:
         return res.replace(tzinfo=tz)
     return res
@@ -129,6 +136,7 @@ def parse_datetime(
     convert_to_utc: bool = False,
     localize_datetime: bool = False,
     parse_epoch_milliseconds: bool = False,
+    dateparser_settings: _Settings | None = None,
 ) -> datetime | None:
     """
     Tries to parse a datetime in lots of ways into a datetime object
@@ -137,7 +145,10 @@ def parse_datetime(
     that is controlled by the flags
     """
     dt = _parse_datetime(
-        date_input, tz=tz, parse_epoch_milliseconds=parse_epoch_milliseconds
+        date_input,
+        tz=tz,
+        parse_epoch_milliseconds=parse_epoch_milliseconds,
+        dateparser_settings=dateparser_settings,
     )
     if dt is None:
         return None
@@ -197,7 +208,10 @@ def format_datetime(dt: datetime, /, *, format: str | None) -> str:
                 f"'arrow' not installed, install with '{sys.executable} -m pip install arrow'"
             ) from ie
 
-        return arrow.get(dt).humanize()
+        # use the timestamp so that we handle timezones properly
+        # otherwise arrow assumes the timezone is UTC sometimes
+        # when its a naive timestamp
+        return arrow.get(dt.timestamp()).humanize()
     elif format == "epoch_milliseconds":
         return str(int(dt.timestamp() * 1000))
     else:
