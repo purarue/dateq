@@ -75,7 +75,7 @@ def _parse_settings(settings: str | None) -> dict[str, Any] | None:
         try:
             item = json.loads(settings)
         except json.JSONDecodeError:
-            raise click.BadParameter(f"Could not parse settings: {settings}")
+            raise click.BadParameter(f"Invalid JSON: '{settings}'")
         if not isinstance(item, dict):
             raise click.BadParameter(
                 f"Settings should be a dict (a top-level JSON object), not {type(item).__name__}"
