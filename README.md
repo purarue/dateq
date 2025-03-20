@@ -32,8 +32,8 @@ Options:
       time | usdate | week_of_year |
       weekday | weekday_name | year]
                                   format for date string
-  --strict / --no-strict          raise an error if the date string could not be parsed  [default: no-
-                                  strict]
+  --strict / --no-strict          raise an error if the date string could not be parsed  [default: strict]
+  --dateparser-settings JSON      a json settings object to be used by the dateparser library
   -h, --help                      Show this message and exit.
 ```
 
