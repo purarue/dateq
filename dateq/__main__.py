@@ -37,7 +37,8 @@ def _wrapped_fmt_list() -> str:
 
     aliases = list(FMT_ALIASES.keys())
 
-    aliases.append("python_strftime_string")
+    aliases.extend(["human", "epoch_milliseconds", "python_strftime_string"])
+    aliases.sort()
 
     # split into groups of 6, join each group with ' | '
     lines_fmted: list[str] = [
