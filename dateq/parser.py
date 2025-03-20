@@ -95,11 +95,11 @@ def _parse_datetime(
     # all sorts of dates as inputs
     # https://github.com/scrapinghub/dateparser#how-to-use
 
-    opts = dateparser_settings or {}
-    for key, value in opts.items():
+    opts: _Settings = dateparser_settings or {}
+    for key, value in DATEPARSER_SETTINGS.items():
         # only overwrite with defaults if not set by the user
-        if key not in opts:
-            opts[key] = value
+        if key not in opts:  # type: ignore
+            opts[key] = value  # type: ignore[literal-required]
 
     res: datetime | None = dateparser.parse(date_input, settings=opts)
     if res is not None and res.tzinfo is None:

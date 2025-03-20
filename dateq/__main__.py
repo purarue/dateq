@@ -1,11 +1,14 @@
 import os
 import sys
 import zoneinfo
-from typing import Iterator, Iterable, Sequence
+from typing import Iterator, Iterable, Sequence, Any, TYPE_CHECKING, Union
 
 import click
 
 from .click_helpers import _parse_timezone
+
+if TYPE_CHECKING:
+    from dateparser import _Settings
 
 CONTEXT_SETTINGS = {
     "max_content_width": 110,
@@ -65,11 +68,19 @@ def _iter_inputs(date: Sequence[str]) -> Iterator[str]:
             yield d
 
 
-def _parse_settings(settings: str | None) -> dict | None:
+def _parse_settings(settings: str | None) -> dict[str, Any] | None:
     if settings is not None and settings.strip():
         import json
 
-        return json.loads(settings)
+        try:
+            item = json.loads(settings)
+        except json.JSONDecodeError:
+            raise click.BadParameter(f"Could not parse settings: {settings}")
+        if not isinstance(item, dict):
+            raise click.BadParameter(
+                f"Settings should be a dict (a top-level JSON object), not {type(item).__name__}"
+            )
+        return item
     return None
 
 
@@ -130,7 +141,7 @@ def parse(
     strict: bool,
     force_tz: zoneinfo.ZoneInfo | None,
     date: Sequence[str],
-    dateparser_settings: dict | None,
+    dateparser_settings: Union["_Settings", None],
 ) -> None:
     """
     Pass dates as arguments, or - to parse from STDIN
