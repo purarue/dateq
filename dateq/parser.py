@@ -174,6 +174,8 @@ FMT_ALIASES = {
     "time": "%H:%M:%S",
     "epoch": "%s",
     "day": "%d",
+    "weekday": "%w",
+    "weekday_name": "%A",
     "month": "%m",
     "year": "%Y",
     "week_of_year": "%U",
