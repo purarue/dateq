@@ -1,6 +1,6 @@
 # dateq
 
-WIP; this is meant to replace and collect all my dozens of tiny date scripts that do custom, little things
+Meant to replace and collect all my dozens of tiny date scripts that do custom, little things
 
 A command line date/time processor (pronounced, like [`jq`](https://jqlang.org/); `date`-`q`)
 
