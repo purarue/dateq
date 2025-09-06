@@ -52,5 +52,5 @@ warn_unreachable = "True"
 addopts = []
 
 [tool.setuptools.packages.find]
-include = ["dateq, dateq.*"]
+include = ["dateq"]
 exclude = []
