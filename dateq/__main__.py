@@ -1,7 +1,8 @@
 import os
 import sys
 import zoneinfo
-from typing import Iterator, Iterable, Sequence, Any, TYPE_CHECKING, Union
+from typing import Any, TYPE_CHECKING, Union
+from collections.abc import Iterator, Iterable, Sequence
 
 import click
 
