@@ -26,13 +26,14 @@ def _parse_epoch_timestamps(
     try:
         # convert to make sure its a valid datetime
         return datetime.fromtimestamp(date_val, tz=tz)
-    except ValueError:
+    except (ValueError, OverflowError, OSError):
+        # out of range for the platform (e.g. huge ints, far past/future)
         pass
 
     if parse_epoch_milliseconds:
         try:
             return datetime.fromtimestamp(date_val / 1000, tz=tz)
-        except ValueError:
+        except (ValueError, OverflowError, OSError):
             pass
 
     return None
